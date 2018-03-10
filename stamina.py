@@ -4,7 +4,7 @@ Stamina.py by Eryk Banatt
 
 TODO:
 
-Wtf is wrong with my random function UGH
+figure out what's up with the win_round/lose_round capping out at 10k
 FIX USAGE OF "n" FOR TWO DIFFERENT THINGS
 
 Write matplotlib animation functions for 3D graphs, test on tournament 1
@@ -50,6 +50,11 @@ def roll_points_normal(n, playerlist):
 
 	for x in range(0, n):
 		plyr = Player(sample[x], x+1, x+1)
+		playerlist[plyr.ID] = plyr
+
+def roll_points_uniform(n, playerlist):
+	for x in range(0, n):
+		plyr = Player(100, x+1, x+1)
 		playerlist[plyr.ID] = plyr
 
 # Takes two lists of dictionaries and adds the first list to the second list
@@ -134,16 +139,7 @@ def double_elim(n, playerlist, wins=[], losses=[]):
 #Simulated Tournaments
 def tournament(n, simulations=10000, PLAYERS=64):
 
-	#Generate P players, give them points, place them into a dictionary
 	playerlist = {}
-
-	#Tournaments that give 100 points to every player equally
-	# Might be nicer as it's own function but it only needs to be called once and saved
-	if(n in [1, 3, 5, 7]):
-		for x in range(0, PLAYERS):
-			plyr = Player(100, x+1, x+1)
-			playerlist[plyr.ID] = plyr
-		default_playerlist = playerlist # Saves this profile in a temp variable
 
 	# These are lists of dictionaries, one dictionary per round
 	# each round win/lose_round odds updates n/2 times (each)
@@ -173,18 +169,17 @@ def tournament(n, simulations=10000, PLAYERS=64):
 	for x in range(0, simulations):
 
 		# reroll points for random assign every simulation
-		if(n in [2, 4, 6, 8]):
-			roll_points_normal(n, playerlist)
+		if(n in [1, 3, 5, 7]):
+			roll_points_uniform(PLAYERS, playerlist)
+		else:
+			roll_points_normal(PLAYERS, playerlist)
 			
 		if(n <= 4): #1-4: Single Elim Variants
 			winner, roundwin, roundlose = single_elim(PLAYERS, playerlist)
 		else: #5-8: Double Elim Variants
 			winner, roundwin, roundlose = double_elim(PLAYERS, playerlist)
 
-		if(n in [1, 3, 5, 7]):
-			playerlist = default_playerlist # Keep 100 for each player
-		else:
-			playerlist = {} # Erase list of players to reroll
+		playerlist = {} # Erase list of players to reroll
 
 		# Add tournament info to collections of data
 		incorporate(winner, win_tournament_by_round)
@@ -192,21 +187,10 @@ def tournament(n, simulations=10000, PLAYERS=64):
 		incorporate(roundlose, lose_round_by_round)
 
 	print(win_tournament_by_round)
-	print(win_round_by_round)
-	print(lose_round_by_round)
+	print(win_round_by_round) #borked
+	print(lose_round_by_round) #borked
 
-
-tournament(1, 100, 2)
-
-
-
-
-
-
-
-
-
-
+tournament(1)
 
 
 #Basic pairing numbers for single elimination tournaments
