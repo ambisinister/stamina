@@ -4,7 +4,9 @@ Stamina.py by Eryk Banatt
 
 TODO:
 
-Test Tournament function, run Tournament 1 test trial 
+Wtf is wrong with my random function UGH
+FIX USAGE OF "n" FOR TWO DIFFERENT THINGS
+
 Write matplotlib animation functions for 3D graphs, test on tournament 1
 Write Double Elimination Function
 Write probability-to-win function 
@@ -58,8 +60,11 @@ def incorporate(newlist, oldlist):
 		c1 = Counter(x)
 		c2 = Counter(y)
 		y.update(c1+c2)
+	
 
-# Tournaments only currently work for powers of 2, since I'll just be using 64 every time
+### Tournaments
+
+## Tournaments only currently work for powers of 2 (just use 64)
 
 # Runs a Single Elimination tournament
 # 	output: winning players match record, 
@@ -73,12 +78,9 @@ def single_elim(n, playerlist, wins=[], losses=[]):
 	p2rec = {}
 
 	if(n == 1):
-		print("tournament complete")
 		return playerlist[n].record, wins, losses
 	else:
 		for x in range(0,n/2):
-			print("{} vs {}".format(x+1, n-x))
-
 			# Both players roll some number between 0 and their current max stamina
 			p1_roll = np.random.randint(0, playerlist[x+1].stam)
 			p2_roll = np.random.randint(0, playerlist[n-x].stam)
@@ -103,7 +105,7 @@ def single_elim(n, playerlist, wins=[], losses=[]):
 					swapPlayersInDict(playerlist[x+1], playerlist[n-x], playerlist)
 					winroll = p2_roll
 					loseroll = p1_roll
-			else #P1 wins, no swaps
+			else: #P1 wins, no swaps
 				winroll = p1_roll
 				loseroll = p2_roll
 			
@@ -117,8 +119,95 @@ def single_elim(n, playerlist, wins=[], losses=[]):
 			# Add losing roll to loss record
 			if(loseroll in lose_round): lose_round[loseroll] += 1
 			else: lose_round[loseroll] = 1
-				
-		single_elim(n/2, playerlist, win_round, lose_round)
+
+		wins.append(win_round)
+		losses.append(lose_round)
+
+		return single_elim(n/2, playerlist, wins, losses)
+
+
+# To Be Written
+def double_elim(n, playerlist, wins=[], losses=[]):
+	print("nah")
+
+
+#Simulated Tournaments
+def tournament(n, simulations=10000, PLAYERS=64):
+
+	#Generate P players, give them points, place them into a dictionary
+	playerlist = {}
+
+	#Tournaments that give 100 points to every player equally
+	# Might be nicer as it's own function but it only needs to be called once and saved
+	if(n in [1, 3, 5, 7]):
+		for x in range(0, PLAYERS):
+			plyr = Player(100, x+1, x+1)
+			playerlist[plyr.ID] = plyr
+		default_playerlist = playerlist # Saves this profile in a temp variable
+
+	# These are lists of dictionaries, one dictionary per round
+	# each round win/lose_round odds updates n/2 times (each)
+	# each tournament win_tournament updates x times where x = matches played by round
+	# each round 
+	win_tournament_by_round = []
+	win_round_by_round = []
+	lose_tournament_by_round = []
+	lose_round_by_round = []
+
+	# "Zero out" lists
+	if(n in [1, 2, 3, 4]):
+		for z in range(0, int(np.log2(PLAYERS))): # number of stages in single elim is repeated div by 2
+			win_tournament_by_round.append({})
+			win_round_by_round.append({})
+			lose_tournament_by_round.append({})
+			lose_round_by_round.append({})
+	else:
+		for z in range(0, (2*PLAYERS-1)): # number of stages
+			win_tournament_by_round.append({})
+			win_round_by_round.append({})
+			lose_tournament_by_round.append({})
+			lose_round_by_round.append({})
+
+
+	#Simulations
+	for x in range(0, simulations):
+
+		# reroll points for random assign every simulation
+		if(n in [2, 4, 6, 8]):
+			roll_points_normal(n, playerlist)
+			
+		if(n <= 4): #1-4: Single Elim Variants
+			winner, roundwin, roundlose = single_elim(PLAYERS, playerlist)
+		else: #5-8: Double Elim Variants
+			winner, roundwin, roundlose = double_elim(PLAYERS, playerlist)
+
+		if(n in [1, 3, 5, 7]):
+			playerlist = default_playerlist # Keep 100 for each player
+		else:
+			playerlist = {} # Erase list of players to reroll
+
+		# Add tournament info to collections of data
+		incorporate(winner, win_tournament_by_round)
+		incorporate(roundwin, win_round_by_round)
+		incorporate(roundlose, lose_round_by_round)
+
+	print(win_tournament_by_round)
+	print(win_round_by_round)
+	print(lose_round_by_round)
+
+
+tournament(1, 100, 2)
+
+
+
+
+
+
+
+
+
+
+
 
 #Basic pairing numbers for single elimination tournaments
 def single_elim_paircheck(n):
@@ -157,66 +246,3 @@ def double_elim_paircheck(n, round):
 				print("{} vs {}".format(x+1, n-(x-n/2)))
 		print("***")
 		double_elim(n/2, round+1)
-
-#Simulated Tournaments
-def tournament(n, simulations=10000, PLAYERS=64):
-
-	#Generate P players, give them points, place them into a dictionary
-	playerlist = {}
-
-	#Tournaments that give 100 points to every player equally
-	# Might be nicer as it's own function but it only needs to be called once and saved
-	if(n in [1, 3, 5, 7]):
-		for x in range(0, n):
-			plyr = Player(100, x+1, x+1)
-			playerlist[plyr.ID] = plyr
-		default_playerlist = playerlist # Saves this profile in a temp variable
-
-	# These are lists of dictionaries, one dictionary per round
-	# each round win/lose_round odds updates n/2 times (each)
-	# each tournament win_tournament updates x times where x = matches played by round
-	# each round 
-	win_tournament_by_round = []
-	win_round_by_round = []
-	lose_tournament_by_round = []
-	lose_round_by_round = []
-
-	# "Zero out" lists in single elimination
-	if(n in [1, 2, 3, 4]):
-		for z in range(0, PLAYERS-1):
-			win_tournament_by_round.append({})
-			win_round_by_round.append({})
-			lose_tournament_by_round.append({})
-			lose_round_by_round.append({})
-	else:
-		for z in range(0, (2*PLAYERS-1)):
-			win_tournament_by_round.append({})
-			win_round_by_round.append({})
-			lose_tournament_by_round.append({})
-			lose_round_by_round.append({})
-
-
-	#Simulations
-	for x in range(0, simulations):
-
-		# reroll points for random assign every simulation
-		if(n in [2, 4, 6, 8]):
-			roll_points_normal(n, playerlist)
-			
-		if(n >= 4): #1-4: Single Elim Variants
-			winner, roundwin, roundlose = single_elim(n, playerlist)
-		else: #5-8: Double Elim Variants
-			winner, roundwin, roundlose = double_elim(n, playerlist)
-
-		if(n in [1, 3, 5, 7]):
-			playerlist = default_playerlist # Keep 100 for each player
-		else:
-			playerlist = {} # Erase list of players to reroll
-
-		# Add tournament info to collections of data
-		incorporate(winner, win_tournament_by_round)
-		incorporate(roundwin, win_round_by_round)
-		incorporate(roundlose, lose_round_by_round)
-
-
-
