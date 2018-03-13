@@ -4,10 +4,9 @@ Stamina.py by Eryk Banatt
 
 TODO:
 
-figure out what's up with the win_round/lose_round capping out at 10k
 FIX USAGE OF "n" FOR TWO DIFFERENT THINGS
+explore winning strategies for tournament 1
 
-Write matplotlib animation functions for 3D graphs, test on tournament 1
 Write Double Elimination Function
 Write probability-to-win function 
 Run all the tournaments
@@ -15,6 +14,8 @@ Run all the tournaments
 
 import numpy as np
 from collections import Counter
+from mpl_toolkits.mplot3d import Axes3D
+import matplotlib.pyplot as plt
 
 # Each individual player
 #	all ints except record, which is a list of dicts
@@ -65,7 +66,39 @@ def incorporate(newlist, oldlist):
 		c1 = Counter(x)
 		c2 = Counter(y)
 		y.update(c1+c2)
-	
+
+# Prepares a dictionary for visualization w/ matplotlib
+# 	sorts / puts values into even multidimensional array
+#	not very efficient but only used once for a demonstrably small use
+def prep_dict_for_viz(borges):
+	ar = []
+
+	for rnd in borges:
+		ar_rnd = []
+		for x in range(0, 100):
+			if x in rnd:
+				ar_rnd.append(rnd[x])
+			else:
+				ar_rnd.append(0)
+		ar.append(ar_rnd)
+
+	return ar
+
+# Plots a 2d array as a 3d surface
+def visualize(arr):
+	fig = plt.figure()
+	ax=Axes3D(fig)
+
+	z = np.transpose(np.array(arr))
+	x = range(1, len(arr)+1)
+	y = range(len(arr[0]))
+
+	hf = plt.figure()
+	ha = hf.add_subplot(111, projection='3d')
+	X, Y = np.meshgrid(x, y)
+
+	ha.plot_surface(X,Y,z,rstride=1,cstride=1)
+	plt.show()
 
 ### Tournaments
 
@@ -175,9 +208,10 @@ def tournament(n, simulations=10000, PLAYERS=64):
 			roll_points_normal(PLAYERS, playerlist)
 			
 		if(n <= 4): #1-4: Single Elim Variants
-			winner, roundwin, roundlose = single_elim(PLAYERS, playerlist)
+			# ok real talk I have no clue why this fixed the problem, something to look into
+			winner, roundwin, roundlose = single_elim(PLAYERS, playerlist, [], [])
 		else: #5-8: Double Elim Variants
-			winner, roundwin, roundlose = double_elim(PLAYERS, playerlist)
+			winner, roundwin, roundlose = double_elim(PLAYERS, playerlist, [], [])
 
 		playerlist = {} # Erase list of players to reroll
 
@@ -186,11 +220,16 @@ def tournament(n, simulations=10000, PLAYERS=64):
 		incorporate(roundwin, win_round_by_round)
 		incorporate(roundlose, lose_round_by_round)
 
-	print(win_tournament_by_round)
-	print(win_round_by_round) #borked
-	print(lose_round_by_round) #borked
+	return win_tournament_by_round, win_round_by_round, lose_round_by_round
 
-tournament(1)
+a, b, c = tournament(1)
+
+aa = prep_dict_for_viz(a)
+bb = prep_dict_for_viz(b)
+cc = prep_dict_for_viz(c)
+
+visualize(bb)
+
 
 
 #Basic pairing numbers for single elimination tournaments
