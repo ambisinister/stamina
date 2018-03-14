@@ -100,6 +100,31 @@ def visualize(arr):
 	ha.plot_surface(X,Y,z,rstride=1,cstride=1)
 	plt.show()
 
+# adds together two 2d arrays of the same dimensions
+#	(works fine)
+def combine(a, b):
+	c = []
+	for x, y in zip(a, b):
+		c_temp = []
+		for x1, y1 in zip(x, y):
+			c_temp.append(x1+y1)
+		c.append(c_temp)
+	return c
+
+# divide every element by its respective pair in a second array
+#
+def divout(a, b):
+	c = []
+	for x, y in zip(a, b):
+		c_temp = []
+		for x1, y1 in zip(x, y):
+			if(y1 == 0):
+				c_temp.append(1)
+			else:
+				c_temp.append(x1 / (y1 * 1.0))
+		c.append(c_temp)
+	return c
+
 ### Tournaments
 
 ## Tournaments only currently work for powers of 2 (just use 64)
@@ -227,8 +252,11 @@ a, b, c = tournament(1)
 aa = prep_dict_for_viz(a)
 bb = prep_dict_for_viz(b)
 cc = prep_dict_for_viz(c)
+z = combine(bb, cc)
+zz = divout(bb, z)
 
-visualize(bb)
+visualize(zz)
+
 
 
 
