@@ -4,17 +4,14 @@ Stamina.py by Eryk Banatt
 
 TODO:
 
-FIX USAGE OF "n" FOR TWO DIFFERENT THINGS
-explore winning strategies for tournament 1
-
 Write Double Elimination Function
-Write probability-to-win function 
 Run all the tournaments
 '''
 
 import numpy as np
 from collections import Counter
 from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import cm
 import matplotlib.pyplot as plt
 
 # Each individual player
@@ -50,6 +47,7 @@ def roll_points_normal(n, playerlist):
 	sample = np.round(sample)
 
 	for x in range(0, n):
+		if(sample[x] < 0): sample[x] = 0
 		plyr = Player(sample[x], x+1, x+1)
 		playerlist[plyr.ID] = plyr
 
@@ -75,7 +73,7 @@ def prep_dict_for_viz(borges):
 
 	for rnd in borges:
 		ar_rnd = []
-		for x in range(0, 100):
+		for x in range(0, len(borges[0])):
 			if x in rnd:
 				ar_rnd.append(rnd[x])
 			else:
@@ -85,19 +83,21 @@ def prep_dict_for_viz(borges):
 	return ar
 
 # Plots a 2d array as a 3d surface
-def visualize(arr):
-	fig = plt.figure()
-	ax=Axes3D(fig)
-
+def visualize(arr, TL="", XL="Round in Tournament", YL="Points Chosen", ZL=""):
 	z = np.transpose(np.array(arr))
 	x = range(1, len(arr)+1)
 	y = range(len(arr[0]))
-
-	hf = plt.figure()
-	ha = hf.add_subplot(111, projection='3d')
 	X, Y = np.meshgrid(x, y)
+	print arr[0]
+	hf = plt.figure()
+	ha = hf.gca(projection='3d')
+	ha.plot_surface(X, Y ,z,rstride=1,cstride=1, cmap=cm.terrain, 
+		linewidth=1, antialiased=False)
+	ha.set_title(TL, y=1.08)
+	ha.set_xlabel(XL)
+	ha.set_ylabel(YL)
+	ha.set_zlabel(ZL)
 
-	ha.plot_surface(X,Y,z,rstride=1,cstride=1)
 	plt.show()
 
 # adds together two 2d arrays of the same dimensions
@@ -137,18 +137,26 @@ def single_elim(n, playerlist, wins=[], losses=[]):
 
 	win_round = {}
 	lose_round = {}
-	p1rec = {}
-	p2rec = {}
 
 	if(n == 1):
+		all_enters = []
 		return playerlist[n].record, wins, losses
 	else:
 		for x in range(0,n/2):
 			# Both players roll some number between 0 and their current max stamina
-			p1_roll = np.random.randint(0, playerlist[x+1].stam)
-			p2_roll = np.random.randint(0, playerlist[n-x].stam)
+			try:
+				p1_roll = np.random.randint(0, playerlist[x+1].stam)
+			except ValueError: #np.random.randint(0, 0) returns an error instead of 0
+				p1_roll = 0
+
+			try:
+				p2_roll = np.random.randint(0, playerlist[n-x].stam)
+			except ValueError:
+				p2_roll = 0
 
 			# Rolls saved in each player's record
+			p1rec = {}
+			p2rec = {}
 			p1rec[p1_roll] = 1
 			p2rec[p2_roll] = 1
 			playerlist[x+1].record.append(p1rec)
@@ -195,7 +203,7 @@ def double_elim(n, playerlist, wins=[], losses=[]):
 
 
 #Simulated Tournaments
-def tournament(n, simulations=10000, PLAYERS=64):
+def tournament(variant, simulations=10000, PLAYERS=64):
 
 	playerlist = {}
 
@@ -209,7 +217,7 @@ def tournament(n, simulations=10000, PLAYERS=64):
 	lose_round_by_round = []
 
 	# "Zero out" lists
-	if(n in [1, 2, 3, 4]):
+	if(variant in [1, 2, 3, 4]):
 		for z in range(0, int(np.log2(PLAYERS))): # number of stages in single elim is repeated div by 2
 			win_tournament_by_round.append({})
 			win_round_by_round.append({})
@@ -227,12 +235,12 @@ def tournament(n, simulations=10000, PLAYERS=64):
 	for x in range(0, simulations):
 
 		# reroll points for random assign every simulation
-		if(n in [1, 3, 5, 7]):
+		if(variant in [1, 3, 5, 7]):
 			roll_points_uniform(PLAYERS, playerlist)
 		else:
 			roll_points_normal(PLAYERS, playerlist)
 			
-		if(n <= 4): #1-4: Single Elim Variants
+		if(variant <= 4): #1-4: Single Elim Variants
 			# ok real talk I have no clue why this fixed the problem, something to look into
 			winner, roundwin, roundlose = single_elim(PLAYERS, playerlist, [], [])
 		else: #5-8: Double Elim Variants
@@ -247,15 +255,20 @@ def tournament(n, simulations=10000, PLAYERS=64):
 
 	return win_tournament_by_round, win_round_by_round, lose_round_by_round
 
-a, b, c = tournament(1)
+win_tourn_raw, win_round_raw, lose_round_raw = tournament(2)
 
-aa = prep_dict_for_viz(a)
-bb = prep_dict_for_viz(b)
-cc = prep_dict_for_viz(c)
-z = combine(bb, cc)
-zz = divout(bb, z)
+# Simple Helper Function
+def prep_batcher(win_tourn_raw, win_round_raw, lose_round_raw):
+	win_tourn = prep_dict_for_viz(win_tourn_raw)
+	win_round = prep_dict_for_viz(win_round_raw)
+	lose_round = prep_dict_for_viz(lose_round_raw)
+	aggregate = combine(win_round, lose_round)
+	round_prob = divout(win_round, aggregate)
+	tourn_prob = divout(win_tourn, aggregate)
+	return win_tourn, win_round, lose_round, aggregate, round_prob, tourn_prob
 
-visualize(zz)
+a, b, c, d, e, f = prep_batcher(win_tourn_raw, win_round_raw, lose_round_raw)
+visualize(a)
 
 
 
