@@ -4,6 +4,7 @@ Stamina.py by Eryk Banatt
 
 TODO:
 
+Write RNG RNG function
 Write Double Elimination Function
 Run all the tournaments
 '''
@@ -269,9 +270,6 @@ def prep_batcher(win_tourn_raw, win_round_raw, lose_round_raw):
 
 a, b, c, d, e, f = prep_batcher(win_tourn_raw, win_round_raw, lose_round_raw)
 visualize(a)
-
-
-
 
 #Basic pairing numbers for single elimination tournaments
 def single_elim_paircheck(n):
