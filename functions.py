@@ -138,7 +138,7 @@ def prep_batcher(win_tourn_raw, win_round_raw, lose_round_raw):
 	tourn_prob = divout(win_tourn, aggregate)
 	return win_tourn, win_round, lose_round, aggregate, round_prob, tourn_prob
 
-#
+# Returns nearest integer percent of two numbers as an int
 def pctof(numer, denom):
 	if denom <= 0:
 		return 100

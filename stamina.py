@@ -24,7 +24,7 @@ from functions import *
 # 	output: winning players match record, 
 #			every rounds winning picks, 
 #			every rounds losing picks
-def single_elim(n, playerlist, wins=[], losses=[]):
+def single_elim(n, playerlist, wins=[], losses=[], pctorraw=1):
 
 	win_round = {}
 	lose_round = {}
@@ -49,12 +49,13 @@ def single_elim(n, playerlist, wins=[], losses=[]):
 			p1rec = {}
 			p2rec = {}
 
-			# Raw Values
-			p1rec[p1_roll] = 1
-			p2rec[p2_roll] = 1
-			# Percentages
-			#p1rec[pctof(p1_roll, playerlist[x+1].stam)] = 1
-			#p2rec[pctof(p2_roll, playerlist[n-x].stam)] = 1
+			# Raw Values or Percentages
+			if pctorraw == 1:
+				p1rec[p1_roll] = 1
+				p2rec[p2_roll] = 1
+			else:
+				p1rec[pctof(p1_roll, playerlist[x+1].stam)] = 1
+				p2rec[pctof(p2_roll, playerlist[n-x].stam)] = 1
 
 			playerlist[x+1].record.append(p1rec)
 			playerlist[n-x].record.append(p2rec)
@@ -76,39 +77,41 @@ def single_elim(n, playerlist, wins=[], losses=[]):
 			else: #P1 wins, no swaps
 				winroll = p1_roll
 				loseroll = p2_roll
-			
-			# Deduct spent stamina from winner (will always be x+1 due to swaps)
-			playerlist[x+1].stam -= winroll
 
-			## Add winning roll to win record
-			# Raw Values
-			if(winroll in win_round): win_round[winroll] += 1
-			else: win_round[winroll] = 1
-			# Percentages
-			#pctofwinroll = pctof(winroll, playerlist[x+1].stam)
-			#if(pctofwinroll in win_round): win_round[pctofwinroll] += 1
-			#else: win_round[pctofwinroll] = 1
+			## Add winning roll to win record (winner will always be x+1 due to swaps)
+			# Raw Values or Percentages
+			if pctorraw == 1:
+				if(winroll in win_round): win_round[winroll] += 1
+				else: win_round[winroll] = 1
+			else:
+				pctofwinroll = pctof(winroll, playerlist[x+1].stam)
+				if(pctofwinroll in win_round): win_round[pctofwinroll] += 1
+				else: win_round[pctofwinroll] = 1
 
 			# Add losing roll to loss record
-			# Raw Values
-			if(loseroll in lose_round): lose_round[loseroll] += 1
-			else: lose_round[loseroll] = 1
-			# Percentages
-			#pctofloseroll = pctof(loseroll, playerlist[n-x].stam)
-			#if(pctofloseroll in lose_round): lose_round[pctofloseroll] += 1
-			#else: lose_round[pctofloseroll] = 1
+			# Raw Values or Percentages
+			if pctorraw == 1:
+				if(loseroll in lose_round): lose_round[loseroll] += 1
+				else: lose_round[loseroll] = 1
+			else:
+				pctofloseroll = pctof(loseroll, playerlist[n-x].stam)
+				if(pctofloseroll in lose_round): lose_round[pctofloseroll] += 1
+				else: lose_round[pctofloseroll] = 1
+
+			# Deduct spent stamina from winner 
+			playerlist[x+1].stam -= winroll
 
 		wins.append(win_round)
 		losses.append(lose_round)
 
-		return single_elim(n/2, playerlist, wins, losses)
+		return single_elim(n/2, playerlist, wins, losses, pctorraw)
 
 # To Be Written
 def double_elim(n, playerlist, wins=[], losses=[]):
 	print("nah")
 
 #Simulated Tournaments
-def tournament(variant, simulations=10000, PLAYERS=64):
+def tournament(variant, simulations=10000, pctorraw=1, PLAYERS=64):
 
 	playerlist = {}
 
@@ -147,9 +150,9 @@ def tournament(variant, simulations=10000, PLAYERS=64):
 			
 		if(variant <= 4): #1-4: Single Elim Variants
 			# ok real talk I have no clue why this fixed the problem, something to look into
-			winner, roundwin, roundlose = single_elim(PLAYERS, playerlist, [], [])
+			winner, roundwin, roundlose = single_elim(PLAYERS, playerlist, [], [], pctorraw)
 		else: #5-8: Double Elim Variants
-			winner, roundwin, roundlose = double_elim(PLAYERS, playerlist, [], [])
+			winner, roundwin, roundlose = double_elim(PLAYERS, playerlist, [], [], pctorraw)
 
 		playerlist = {} # Erase list of players to reroll
 
