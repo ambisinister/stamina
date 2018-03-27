@@ -111,7 +111,7 @@ def double_elim(n, playerlist, wins=[], losses=[]):
 	print("nah")
 
 #Simulated Tournaments
-def tournament(variant, simulations=10000, pctorraw=1, PLAYERS=64):
+def tournament(variant, simulations=100000, pctorraw=1, PLAYERS=64):
 
 	playerlist = {}
 
