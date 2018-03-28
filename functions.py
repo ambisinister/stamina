@@ -97,6 +97,15 @@ def visualize(arr, TL="", ZL="", YL="Points Chosen", XL="Round in Tournament"):
 
 	plt.show()
 
+def histogram_a(arr):
+	plt.hist(arr, density=False, facecolor='g')
+	plt.xlabel('Points Spent')
+	plt.ylabel('Count')
+	plt.title('Points Distribution of Tournament Winner')
+	#plt.axis([75, 150])
+	plt.grid(True)
+	plt.show()
+
 # adds together two 2d arrays of equivalent or unequivalent shapes
 # 	(changed from zip to izip longest because needed to handle diff lengths)
 def combine(a, b):

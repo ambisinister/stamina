@@ -4,7 +4,6 @@ Stamina.py by Eryk Banatt
 
 TODO:
 
-Write RNG RNG function
 Write Double Elimination Function
 Run all the tournaments
 '''
@@ -31,17 +30,19 @@ def single_elim(n, playerlist, wins=[], losses=[], pctorraw=1):
 
 	if(n == 1):
 		all_enters = []
-		return playerlist[n].record, wins, losses
+		winner_sum = 0
+		for x in playerlist[n].record: winner_sum += x.keys()[0]
+		return playerlist[n].record, wins, losses, winner_sum
 	else:
 		for x in range(0,n/2):
 			# Both players roll some number between 0 and their current max stamina
 			try:
-				p1_roll = np.random.randint(0, playerlist[x+1].stam)
+				p1_roll = np.random.randint(0, playerlist[x+1].stam + 1)
 			except ValueError: #np.random.randint(0, 0) returns an error instead of 0
 				p1_roll = 0
 
 			try:
-				p2_roll = np.random.randint(0, playerlist[n-x].stam)
+				p2_roll = np.random.randint(0, playerlist[n-x].stam + 1)
 			except ValueError:
 				p2_roll = 0
 
@@ -123,6 +124,7 @@ def tournament(variant, simulations=100000, pctorraw=1, PLAYERS=64):
 	win_round_by_round = []
 	lose_tournament_by_round = []
 	lose_round_by_round = []
+	all_winners = []
 
 	# "Zero out" lists
 	if(variant in [1, 2, 3, 4]):
@@ -150,9 +152,9 @@ def tournament(variant, simulations=100000, pctorraw=1, PLAYERS=64):
 			
 		if(variant <= 4): #1-4: Single Elim Variants
 			# ok real talk I have no clue why this fixed the problem, something to look into
-			winner, roundwin, roundlose = single_elim(PLAYERS, playerlist, [], [], pctorraw)
+			winner, roundwin, roundlose, winner_sum = single_elim(PLAYERS, playerlist, [], [], pctorraw)
 		else: #5-8: Double Elim Variants
-			winner, roundwin, roundlose = double_elim(PLAYERS, playerlist, [], [], pctorraw)
+			winner, roundwin, roundlose, winner_sum = double_elim(PLAYERS, playerlist, [], [], pctorraw)
 
 		playerlist = {} # Erase list of players to reroll
 
@@ -160,6 +162,7 @@ def tournament(variant, simulations=100000, pctorraw=1, PLAYERS=64):
 		incorporate(winner, win_tournament_by_round)
 		incorporate(roundwin, win_round_by_round)
 		incorporate(roundlose, lose_round_by_round)
+		all_winners.append(winner_sum)
 
-	return win_tournament_by_round, win_round_by_round, lose_round_by_round
+	return win_tournament_by_round, win_round_by_round, lose_round_by_round, all_winners
 
