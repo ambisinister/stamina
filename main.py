@@ -10,7 +10,7 @@ def main():
 
 	win_tourn_raw, win_round_raw, lose_round_raw, winsumraw = tournament(2)
 	win_tourn, win_round, lose_round, aggregate, round_prob, tourn_prob = prep_batcher(win_tourn_raw, win_round_raw, lose_round_raw)
-	histogram_a(winsumraw)
+	visualize(logReg(win_round, lose_round), "test", "Probability")
 
 	'''
 	visualize(win_round, "Count of Points Spent By Round Winner", "Quantity")

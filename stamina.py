@@ -4,8 +4,10 @@ Stamina.py by Eryk Banatt
 
 TODO:
 
+Write logreg for winning tournament probability in tournament 1
+complete all tasks for tournament 1
+explore seeds for tournament 2
 Write Double Elimination Function
-Run all the tournaments
 '''
 
 import numpy as np
@@ -23,7 +25,7 @@ from functions import *
 # 	output: winning players match record, 
 #			every rounds winning picks, 
 #			every rounds losing picks
-def single_elim(n, playerlist, wins=[], losses=[], pctorraw=1):
+def single_elim(n, playerlist, wins=[], losses=[], raw_values=True):
 
 	win_round = {}
 	lose_round = {}
@@ -51,7 +53,7 @@ def single_elim(n, playerlist, wins=[], losses=[], pctorraw=1):
 			p2rec = {}
 
 			# Raw Values or Percentages
-			if pctorraw == 1:
+			if raw_values:
 				p1rec[p1_roll] = 1
 				p2rec[p2_roll] = 1
 			else:
@@ -81,7 +83,7 @@ def single_elim(n, playerlist, wins=[], losses=[], pctorraw=1):
 
 			## Add winning roll to win record (winner will always be x+1 due to swaps)
 			# Raw Values or Percentages
-			if pctorraw == 1:
+			if raw_values == 1:
 				if(winroll in win_round): win_round[winroll] += 1
 				else: win_round[winroll] = 1
 			else:
@@ -91,7 +93,7 @@ def single_elim(n, playerlist, wins=[], losses=[], pctorraw=1):
 
 			# Add losing roll to loss record
 			# Raw Values or Percentages
-			if pctorraw == 1:
+			if raw_values:
 				if(loseroll in lose_round): lose_round[loseroll] += 1
 				else: lose_round[loseroll] = 1
 			else:
@@ -105,14 +107,14 @@ def single_elim(n, playerlist, wins=[], losses=[], pctorraw=1):
 		wins.append(win_round)
 		losses.append(lose_round)
 
-		return single_elim(n/2, playerlist, wins, losses, pctorraw)
+		return single_elim(n/2, playerlist, wins, losses, raw_values)
 
 # To Be Written
 def double_elim(n, playerlist, wins=[], losses=[]):
 	print("nah")
 
 #Simulated Tournaments
-def tournament(variant, simulations=100000, pctorraw=1, PLAYERS=64):
+def tournament(variant, simulations=100000, raw_values=True, PLAYERS=64):
 
 	playerlist = {}
 
@@ -152,9 +154,9 @@ def tournament(variant, simulations=100000, pctorraw=1, PLAYERS=64):
 			
 		if(variant <= 4): #1-4: Single Elim Variants
 			# ok real talk I have no clue why this fixed the problem, something to look into
-			winner, roundwin, roundlose, winner_sum = single_elim(PLAYERS, playerlist, [], [], pctorraw)
+			winner, roundwin, roundlose, winner_sum = single_elim(PLAYERS, playerlist, [], [], raw_values)
 		else: #5-8: Double Elim Variants
-			winner, roundwin, roundlose, winner_sum = double_elim(PLAYERS, playerlist, [], [], pctorraw)
+			winner, roundwin, roundlose, winner_sum = double_elim(PLAYERS, playerlist, [], [], raw_values)
 
 		playerlist = {} # Erase list of players to reroll
 

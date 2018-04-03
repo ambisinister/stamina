@@ -11,6 +11,8 @@ from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import cm
 import itertools
 import matplotlib.pyplot as plt
+from sklearn.linear_model import LogisticRegression
+from sklearn import metrics
 
 # Each individual player
 #	all ints except record, which is a list of dicts
@@ -21,6 +23,38 @@ class Player:
 		self.ID = currentID
 		self.seed = OriginalSeed
 		self.record = []
+
+# Generates a logistic-compatible dataset from the aggregates
+#	This is insanely slow and I should think about optimizing this in a not stupid way
+def make_data(wins, losses):
+	features = []
+	targets = []
+	for point, quant in enumerate(wins):
+		for z in range(0, quant):
+			features.append([point])
+			targets.append(1)
+	for point, quant in enumerate(losses):
+		for z in range(0, quant):
+			features.append([point])
+			targets.append(0)
+	return features, targets
+
+
+# Runs a Logistic Regression Analysis
+#	I honestly have no idea what I'm doing here
+def logReg(wins, losses):
+	regression = []
+
+	for win_this_round, lose_this_round in zip(wins, losses):
+		X, Y = make_data(win_this_round, lose_this_round)
+		logistic_regression = LogisticRegression()
+		logistic_regression.fit(X, Y)
+		zz = np.array(range(max(len(win_this_round), len(lose_this_round))))
+		regression.append(logistic_regression.predict_proba(zz.reshape(-1, 1))[:,1])
+
+	return regression
+
+### Might want to run a "validate" on this regression on another, second trial of more data to assess goodness of fit
 
 # Swaps currentID of both players, keeps seed the same
 # 	This is used for pairing players even when they get upset
