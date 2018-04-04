@@ -168,3 +168,12 @@ def tournament(variant, simulations=100000, raw_values=True, PLAYERS=64):
 
 	return win_tournament_by_round, win_round_by_round, lose_round_by_round, all_winners
 
+# Sort of niche function to generate a plot of the top of the normal distribution for successively larger tournaments
+# 	more mainfile-ish code but I want to refer back to it later without deleting it
+def find_max_densities(variant, power, sims=100000, raw_values=True):
+	tops = []
+	for x in range(1, power+1):
+		players = 2 ** x
+		W, WR, LR, WS = tournament(variant, sims, raw_values, players)
+		tops.append(max(WS, key=WS.count))
+	return tops

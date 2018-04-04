@@ -8,10 +8,21 @@ from stamina import *
 
 def main():
 
-	win_tourn_raw, win_round_raw, lose_round_raw, winsumraw = tournament(2)
-	win_tourn, win_round, lose_round, aggregate, round_prob, tourn_prob = prep_batcher(win_tourn_raw, win_round_raw, lose_round_raw)
-	visualize(logReg(win_round, lose_round), "test", "Probability")
+	zz = find_max_densities(2, 25)
+	print(zz)
+	aa = plt.figure()
+	plt.plot(zz)
+	plt.title("Mode of Points Spent By Tournament Winner Given Number of Rounds")
+	plt.xlabel("Rounds")
+	plt.ylabel("Points")
+	plt.show()
 
+	'''
+	win_tourn_raw, win_round_raw, lose_round_raw, winsumraw = tournament(2, 100)
+	win_tourn, win_round, lose_round, aggregate, round_prob, tourn_prob = prep_batcher(win_tourn_raw, win_round_raw, lose_round_raw)
+	
+	histogram_a(winsumraw)
+	'''
 	'''
 	visualize(win_round, "Count of Points Spent By Round Winner", "Quantity")
 	visualize(win_tourn, "Count of Points Spent By Eventual Tournament Winner", "Quantity")

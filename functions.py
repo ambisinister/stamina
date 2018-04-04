@@ -39,14 +39,32 @@ def make_data(wins, losses):
 			targets.append(0)
 	return features, targets
 
+# Generates a logistic-compatible dataset and also subtracts one from the other
+#	Used for arriving at "Lose This Tournament" from "Win Tournament" and "All"
+#	(((((Unfinished)))))
+def make_data_subtract(wins, losses):
+	features = []
+	targets = []
+	for point, quant in enumerate(wins):
+		for z in range(0, quant):
+			features.append([point])
+			targets.append(1)
+	for point, quant in enumerate(losses):
+		for z in range(0, quant):
+			features.append([point])
+			targets.append(0)
+	return features, targets
 
 # Runs a Logistic Regression Analysis
 #	I honestly have no idea what I'm doing here
-def logReg(wins, losses):
+def logReg(wins, losses, dont_subtract=True):
 	regression = []
 
 	for win_this_round, lose_this_round in zip(wins, losses):
-		X, Y = make_data(win_this_round, lose_this_round)
+		if(dont_subtract):
+			X, Y = make_data(win_this_round, lose_this_round)
+		else:
+			X, Y = make_data_subtract(win_this_round, lose_this_round)
 		logistic_regression = LogisticRegression()
 		logistic_regression.fit(X, Y)
 		zz = np.array(range(max(len(win_this_round), len(lose_this_round))))
@@ -131,6 +149,7 @@ def visualize(arr, TL="", ZL="", YL="Points Chosen", XL="Round in Tournament"):
 
 	plt.show()
 
+# Builds a histogram with things I want in it
 def histogram_a(arr):
 	plt.hist(arr, density=False, facecolor='g')
 	plt.xlabel('Points Spent')
