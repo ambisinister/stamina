@@ -5,9 +5,10 @@ Stamina.py by Eryk Banatt
 TODO:
 
 Write logreg for winning tournament probability in tournament 1
+Write Double Elimination Functions
 complete all tasks for tournament 1
 explore seeds for tournament 2
-Write Double Elimination Function
+
 '''
 
 import numpy as np
@@ -170,9 +171,10 @@ def tournament(variant, simulations=100000, raw_values=True, PLAYERS=64):
 
 # Sort of niche function to generate a plot of the top of the normal distribution for successively larger tournaments
 # 	more mainfile-ish code but I want to refer back to it later without deleting it
-def find_max_densities(variant, power, sims=100000, raw_values=True):
+def find_max_densities(variant, power, sims=10000, raw_values=True):
 	tops = []
 	for x in range(1, power+1):
+		print x
 		players = 2 ** x
 		W, WR, LR, WS = tournament(variant, sims, raw_values, players)
 		tops.append(max(WS, key=WS.count))
