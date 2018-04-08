@@ -42,18 +42,21 @@ def make_data(wins, losses):
 # Generates a logistic-compatible dataset and also subtracts one from the other
 #	Used for arriving at "Lose This Tournament" from "Win Tournament" and "All"
 #	(((((Unfinished)))))
-def make_data_subtract(wins, losses):
-	features = []
-	targets = []
-	for point, quant in enumerate(wins):
-		for z in range(0, quant):
-			features.append([point])
-			targets.append(1)
-	for point, quant in enumerate(losses):
-		for z in range(0, quant):
-			features.append([point])
-			targets.append(0)
-	return features, targets
+def make_data_subtract(x, y):
+	wins_pad = []
+	all_pad = []
+
+	diff = len(x) - len(y)
+	if diff >= 0:
+		all_pad = np.pad(y, (0, diff), 'constant')
+		wins_pad = x
+	else:
+		all_pad = y
+		wins_pad = np.pad(x, (0, -1 * diff), 'constant')
+
+	losses = np.subtract(all_pad, wins_pad)
+
+	return losses
 
 # Runs a Logistic Regression Analysis
 #	I honestly have no idea what I'm doing here
@@ -64,7 +67,7 @@ def logReg(wins, losses, dont_subtract=True):
 		if(dont_subtract):
 			X, Y = make_data(win_this_round, lose_this_round)
 		else:
-			X, Y = make_data_subtract(win_this_round, lose_this_round)
+			X, Y = make_data(win_this_round, make_data_subtract(win_this_round, lose_this_round))
 		logistic_regression = LogisticRegression()
 		logistic_regression.fit(X, Y)
 		zz = np.array(range(max(len(win_this_round), len(lose_this_round))))
@@ -90,7 +93,7 @@ def swapPlayersInDict(player1, player2, dic):
 # 	Will need to be rerolled every simulation, since 64 won't get every value
 # 		(tested and looks good)
 def roll_points_normal(n, playerlist):
-	mu, sigma = 75, 25 #mean 75, SD 25; might need tuning
+	mu, sigma = 50, 25 #mean 75, SD 25; might need tuning
 	sample = np.random.normal(mu, sigma, n)
 	sample.sort()
 	sample = sample[::-1] # feels gross doing this instead of reverse=True but it's not behaving with numpy
@@ -188,6 +191,19 @@ def divout(a, b):
 			else:
 				c_temp.append(x1 / (y1 * 1.0))
 		c.append(c_temp)
+	return c
+
+def divout2(a, b):
+	c = []
+	for x, y in zip(a, b):
+		diff = len(x) - len(y)
+		if diff >= 0:
+			all_pad = np.pad(y, (0, diff), 'constant')
+			wins_pad = x
+		else:
+			all_pad = y
+			wins_pad = np.pad(x, (0, -1 * diff), 'constant')
+		c.append(np.absolute(np.true_divide(wins_pad, all_pad)).tolist())
 	return c
 
 # Simple Helper Function
