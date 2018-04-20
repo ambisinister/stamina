@@ -41,7 +41,6 @@ def make_data(wins, losses):
 
 # Generates a logistic-compatible dataset and also subtracts one from the other
 #	Used for arriving at "Lose This Tournament" from "Win Tournament" and "All"
-#	(((((Unfinished)))))
 def make_data_subtract(x, y):
 	wins_pad = []
 	all_pad = []
@@ -79,7 +78,6 @@ def logReg(wins, losses, dont_subtract=True):
 
 # Swaps currentID of both players, keeps seed the same
 # 	This is used for pairing players even when they get upset
-#		(Tested and confirmed working)
 def swapPlayersInDict(player1, player2, dic):
 	p1_cID = player1.ID
 	p2_cID = player2.ID
@@ -91,7 +89,6 @@ def swapPlayersInDict(player1, player2, dic):
 
 # Creates n players in playerlist with random, normally distributed stamina values
 # 	Will need to be rerolled every simulation, since 64 won't get every value
-# 		(tested and looks good)
 def roll_points_normal(n, playerlist):
 	mu, sigma = 50, 25 #mean 75, SD 25; might need tuning
 	sample = np.random.normal(mu, sigma, n)
@@ -104,9 +101,10 @@ def roll_points_normal(n, playerlist):
 		plyr = Player(sample[x], x+1, x+1)
 		playerlist[plyr.ID] = plyr
 
-def roll_points_uniform(n, playerlist):
+# Assigns value val to all n players in playerlist 
+def roll_points_uniform(n, playerlist, val=100):
 	for x in range(0, n):
-		plyr = Player(100, x+1, x+1)
+		plyr = Player(val, x+1, x+1)
 		playerlist[plyr.ID] = plyr
 
 # Takes two lists of dictionaries and adds the first list to the second list
@@ -180,7 +178,6 @@ def combine(a, b):
 	return c
 
 # divide every element by its respective pair in a second array
-#
 def divout(a, b):
 	c = []
 	for x, y in zip(a, b):
@@ -193,6 +190,7 @@ def divout(a, b):
 		c.append(c_temp)
 	return c
 
+# divide every element by its respective pair in a second array, padding zeros if no pair exists
 def divout2(a, b):
 	c = []
 	for x, y in zip(a, b):
@@ -259,4 +257,4 @@ def double_elim_paircheck(n, round):
 			for x in range(n/2, 3*n/4):
 				print("{} vs {}".format(x+1, n-(x-n/2)))
 		print("***")
-		double_elim(n/2, round+1)
+		double_elim_paircheck(n/2, round+1)
