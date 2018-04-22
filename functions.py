@@ -23,6 +23,7 @@ class Player:
 		self.ID = currentID
 		self.seed = OriginalSeed
 		self.record = []
+		self.record_L = []
 
 # Generates a logistic-compatible dataset from the aggregates
 #	This is insanely slow and I should think about optimizing this in a not stupid way
