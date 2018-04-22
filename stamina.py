@@ -53,35 +53,38 @@ def double_elim(n, playerlist, wins=[], losses=[], rnd=0, raw_values=True):
 	else:
 		#winners bracket
 		for x in range(0,n/2):
-			single_match(playerlist, n, x, wins, losses, 0.5, raw_values)
+			single_match(playerlist, n, x, wins, losses, 1, raw_values)
 		#losers bracket
 		if(rnd == 0):
 			#losers vs losers
 			for x in range(n/2, 3*n/4):
-				single_match(playerlist, n, x, wins, losses, 0.75, raw_values)
+				single_match(playerlist, n, x, wins, losses, 3, raw_values)
 		else:
 			#winners vs losers
 			for x in range(n/2, n):
-				single_match(playerlist, n, x, wins, losses, 1, raw_values)
+				single_match(playerlist, n, x, wins, losses, 2, raw_values)
 
 			#losers vs losers
 			for x in range(n/2, 3*n/4):
-				single_match(playerlist, n, x, wins, losses, 0.75, raw_values)
+				single_match(playerlist, n, x, wins, losses, 3, raw_values)
 		double_elim(n/2, playerlist, wins, losses, rnd+1, raw_values)
 
-# Stuck working for single_elim
+# Broken but I think the logic for double elim is properly there now
 # Consult double elim paircheck and see if there's a clever way to pass a value
-def single_match(playerlist, n, x, wins, losses, win_round, lose_round, ratio = 0.5, raw_values=True):
+def single_match(playerlist, n, x, wins, losses, win_round, lose_round, ratio = 1, raw_values=True):
 	#print("{} vs {}".format(playerlist[x+1].ID, playerlist[n-x].ID))
 	firstplayer = x+1
 	
 	# This is gonna be different when I fix the paircheck / double elim params 
-	if(ratio == 0.5):
+	if(ratio == 1):
 		secondplayer = n-x
-	elif(ratio == 0.75):
+		phase = 0 #winners
+	elif(ratio == 2):
+		secondplayer = (2*n) - x #fix
+		phase = 1 #losers
+	elif(ratio == 3):
 		secondplayer = ((3*n)/2) - x
-	else:
-		secondplayer = (2*n) - x
+		phase = 1 #losers
 	#secondplayer = 
 
 	try:
@@ -106,8 +109,26 @@ def single_match(playerlist, n, x, wins, losses, win_round, lose_round, ratio = 
 		p1rec[pctof(p1_roll, playerlist[firstplayer].stam)] = 1
 		p2rec[pctof(p2_roll, playerlist[secondplayer].stam)] = 1
 
-	playerlist[firstplayer].record.append(p1rec)
-	playerlist[secondplayer].record.append(p2rec)
+	#hackathony way to save these to the correct dict to the correct spot
+	phase_rec1 = [{}, {}]
+	phase_rec2 = [{}, {}]
+
+	#Place this round into the correct index
+	phase_rec1[phase] = p1rec
+	phase_rec2[phase] = p2rec
+
+	#Updates winning and losing records:
+	#	if it's in winners, it publishes the result into their winners record, and a blank dict for phase 1 of the losers record
+	#		since losing in winners places you into losers phase 2, and you'll never reach losers phase 1
+	#	if it's in losers phase 1, it publishes a blank dict into the winners record for record keeping purposes, and the result  
+	#		into their losers record
+	#	if it's in losers phase 2, it publishes just the result into their losers record, since the winners dict for this round  
+	#		was already included in either the winners phase or the losers phase 1 
+	if(ratio in [1, 2]):
+		playerlist[firstplayer].record.append(phase_rec1[0])
+		playerlist[secondplayer].record.append(phase_rec2[0])
+	playerlist[firstplayer].record_L.append(phase_rec1[1])
+	playerlist[secondplayer].record_L.append(phase_rec2[1])
 
 	# Evaluate which player won
 	if(p1_roll < p2_roll): # P2 wins, swaps IDs
@@ -126,6 +147,9 @@ def single_match(playerlist, n, x, wins, losses, win_round, lose_round, ratio = 
 	else: #P1 wins, no swaps
 		winroll = p1_roll
 		loseroll = p2_roll
+
+	# if it's in winners, the winner will never enter that round's losers phase 2, so a blank dict is appended to only that player
+	if(phase == 0): playerlist[firstplayer].record_L.append(phase_rec1[1])
 
 	## Add winning roll to win record (winner will always be x+1 due to swaps)
 	# Raw Values or Percentages
@@ -149,6 +173,9 @@ def single_match(playerlist, n, x, wins, losses, win_round, lose_round, ratio = 
 
 	# Deduct spent stamina from winner 
 	playerlist[firstplayer].stam -= winroll
+
+	# Deduct spent stamina from loser 
+	playerlist[secondplayer].stam -= loseroll
 
 #Simulated Tournaments
 def tournament(variant, simulations=100000, raw_values=True, PLAYERS=64):
