@@ -7,10 +7,12 @@ mainfile which actually runs things
 from stamina import *
 
 def main():
-	win_tournament_by_round, win_round_by_round, lose_round_by_round, all_winners = tournament(1)
+	#double_elim_paircheck(32, 0)
+
+	win_tournament_by_round, win_round_by_round, lose_round_by_round, all_winners = tournament(1, 1000)
 	win_tourn, win_round, lose_round, aggregate, round_prob, tourn_prob = prep_batcher(win_tournament_by_round, win_round_by_round, lose_round_by_round)
-	visualize(win_tourn, "Test", "Probability")
-	#visualize(zz, "Test", "Probability")
+	#visualize(win_tourn, "Test", "Probability")
+	visualize(tourn_prob, "Test", "Probability")
 	
 
 

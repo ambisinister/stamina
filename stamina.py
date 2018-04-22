@@ -36,7 +36,7 @@ def single_elim(n, playerlist, wins=[], losses=[], raw_values=True):
 		return playerlist[n].record, wins, losses, winner_sum
 	else:
 		for x in range(0,n/2):
-			single_match(playerlist, n, x, wins, losses, win_round, lose_round, raw_values)
+			single_match(playerlist, n, x, wins, losses, win_round, lose_round, 0.5, raw_values)
 
 		wins.append(win_round)
 		losses.append(lose_round)
@@ -53,33 +53,44 @@ def double_elim(n, playerlist, wins=[], losses=[], rnd=0, raw_values=True):
 	else:
 		#winners bracket
 		for x in range(0,n/2):
-			single_match(playerlist, n, x, wins, losses, raw_values)
+			single_match(playerlist, n, x, wins, losses, 0.5, raw_values)
 		#losers bracket
 		if(rnd == 0):
 			#losers vs losers
 			for x in range(n/2, 3*n/4):
-				single_match(playerlist, n, x, wins, losses, raw_values)
+				single_match(playerlist, n, x, wins, losses, 0.75, raw_values)
 		else:
 			#winners vs losers
 			for x in range(n/2, n):
-				single_match(playerlist, n, x, wins, losses, raw_values)
+				single_match(playerlist, n, x, wins, losses, 1, raw_values)
 
 			#losers vs losers
 			for x in range(n/2, 3*n/4):
-				single_match(playerlist, n, x, wins, losses, raw_values)
+				single_match(playerlist, n, x, wins, losses, 0.75, raw_values)
 		double_elim(n/2, playerlist, wins, losses, rnd+1, raw_values)
 
 # Stuck working for single_elim
 # Consult double elim paircheck and see if there's a clever way to pass a value
-def single_match(playerlist, n, x, wins, losses, win_round, lose_round, raw_values):
+def single_match(playerlist, n, x, wins, losses, win_round, lose_round, ratio = 0.5, raw_values=True):
 	#print("{} vs {}".format(playerlist[x+1].ID, playerlist[n-x].ID))
+	firstplayer = x+1
+	
+	# This is gonna be different when I fix the paircheck / double elim params 
+	if(ratio == 0.5):
+		secondplayer = n-x
+	elif(ratio == 0.75):
+		secondplayer = ((3*n)/2) - x
+	else:
+		secondplayer = (2*n) - x
+	#secondplayer = 
+
 	try:
-		p1_roll = np.random.randint(0, playerlist[x+1].stam + 1)
+		p1_roll = np.random.randint(0, playerlist[firstplayer].stam + 1)
 	except ValueError: #np.random.randint(0, 0) returns an error instead of 0
 		p1_roll = 0
 
 	try:
-		p2_roll = np.random.randint(0, playerlist[n-x].stam + 1)
+		p2_roll = np.random.randint(0, playerlist[secondplayer].stam + 1)
 	except ValueError:
 		p2_roll = 0
 
@@ -92,15 +103,15 @@ def single_match(playerlist, n, x, wins, losses, win_round, lose_round, raw_valu
 		p1rec[p1_roll] = 1
 		p2rec[p2_roll] = 1
 	else:
-		p1rec[pctof(p1_roll, playerlist[x+1].stam)] = 1
-		p2rec[pctof(p2_roll, playerlist[n-x].stam)] = 1
+		p1rec[pctof(p1_roll, playerlist[firstplayer].stam)] = 1
+		p2rec[pctof(p2_roll, playerlist[secondplayer].stam)] = 1
 
-	playerlist[x+1].record.append(p1rec)
-	playerlist[n-x].record.append(p2rec)
+	playerlist[firstplayer].record.append(p1rec)
+	playerlist[secondplayer].record.append(p2rec)
 
 	# Evaluate which player won
 	if(p1_roll < p2_roll): # P2 wins, swaps IDs
-		swapPlayersInDict(playerlist[x+1], playerlist[n-x], playerlist)
+		swapPlayersInDict(playerlist[firstplayer], playerlist[secondplayer], playerlist)
 		winroll = p2_roll
 		loseroll = p1_roll
 	elif(p1_roll == p2_roll): # Tie, Randomly decided
@@ -109,7 +120,7 @@ def single_match(playerlist, n, x, wins, losses, win_round, lose_round, raw_valu
 			winroll = p1_roll
 			loseroll = p2_roll
 		else: #P2 wins requires swap
-			swapPlayersInDict(playerlist[x+1], playerlist[n-x], playerlist)
+			swapPlayersInDict(playerlist[firstplayer], playerlist[secondplayer], playerlist)
 			winroll = p2_roll
 			loseroll = p1_roll
 	else: #P1 wins, no swaps
@@ -122,7 +133,7 @@ def single_match(playerlist, n, x, wins, losses, win_round, lose_round, raw_valu
 		if(winroll in win_round): win_round[winroll] += 1
 		else: win_round[winroll] = 1
 	else:
-		pctofwinroll = pctof(winroll, playerlist[x+1].stam)
+		pctofwinroll = pctof(winroll, playerlist[firstplayer].stam)
 		if(pctofwinroll in win_round): win_round[pctofwinroll] += 1
 		else: win_round[pctofwinroll] = 1
 
@@ -132,12 +143,12 @@ def single_match(playerlist, n, x, wins, losses, win_round, lose_round, raw_valu
 		if(loseroll in lose_round): lose_round[loseroll] += 1
 		else: lose_round[loseroll] = 1
 	else:
-		pctofloseroll = pctof(loseroll, playerlist[n-x].stam)
+		pctofloseroll = pctof(loseroll, playerlist[secondplayer].stam)
 		if(pctofloseroll in lose_round): lose_round[pctofloseroll] += 1
 		else: lose_round[pctofloseroll] = 1
 
 	# Deduct spent stamina from winner 
-	playerlist[x+1].stam -= winroll
+	playerlist[firstplayer].stam -= winroll
 
 #Simulated Tournaments
 def tournament(variant, simulations=100000, raw_values=True, PLAYERS=64):

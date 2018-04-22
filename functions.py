@@ -245,16 +245,17 @@ def double_elim_paircheck(n, round):
 		if(round == 0):
 			#losers vs losers
 			for x in range(n/2, 3*n/4):
-				print("{} vs {}".format(x+1, n-(x-n/2)))
+				print("{} vs {}".format(x+1, ((3*n)/2) - x))
 			print("~~~~")
 		else:
 			#winners vs losers
+			# I need to fix this because it's not consistent with how this work
 			for x in range(n/2, n):
-				print("{} vs {}".format(x+1, (3*n/2)-(x-(n/2))))
+				print("{} vs {}".format(x+1, (2*n) - x))
 			print("~~~~")
 
 			#losers vs losers
 			for x in range(n/2, 3*n/4):
-				print("{} vs {}".format(x+1, n-(x-n/2)))
+				print("{} vs {}".format(x+1, ((3*n)/2) - x))
 		print("***")
 		double_elim_paircheck(n/2, round+1)
