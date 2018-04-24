@@ -134,6 +134,15 @@ def prep_dict_for_viz(borges):
 
 	return ar
 
+def add_to_recordbook(round_d, roll, playerlist, x, raw_values):
+	if raw_values:
+		if(roll in round_d): round_d[roll] += 1
+		else: round_d[roll] = 1
+	else:
+		pctofroll = pctof(roll, playerlist[x].stam)
+		if(pctofroll in round_d): round_d[pctofroll] += 1
+		else: round_d[pctofroll] = 1
+
 # Plots a 2d array as a 3d surface
 def visualize(arr, TL="", ZL="", YL="Points Chosen", XL="Round in Tournament"):
 	z = np.transpose(np.array(arr))
