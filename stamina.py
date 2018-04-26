@@ -7,9 +7,9 @@ TODO:
 read this and fix shit
 http://docs.python-guide.org/en/latest/writing/gotchas/
 
-finish grand finals logic
 explore seeds for tournament 2
-iron out kinks between single and double elimination both being compatible with the same functions
+explore difficulty rating in typical brackets and in actual brackets
+clean up shit, make sure its all good and readable
 '''
 
 import numpy as np
@@ -53,33 +53,54 @@ def double_elim(n, playerlist, wins, losses, wins_L, losses_L, rnd, raw_values=T
 	win_round_L = {}
 	lose_round_L = {}
 
-	if(n == 1): #this is wrong it stops after winners finals lol
+	if(n == 1):
+		#Grand Finals set 1
 		bracket_L_bracket = playerlist[n+1].seed
+		single_match(playerlist, 2, 0, wins, losses, win_round, lose_round, wins_L, losses_L, win_round_L, lose_round_L, 1, raw_values)
+		
+		#Grand Finals set 2
+		if playerlist[n+1].seed != bracket_L_bracket: 
+			single_match(playerlist, 2, 0, wins, losses, win_round, lose_round, wins_L, losses_L, win_round_L, lose_round_L, 1, raw_values)
+		
+		#sum points spent
 		winner_sum = 0
-		for x in playerlist[n].record: winner_sum += x.keys()[0]
+		for x in playerlist[n].record: #winners
+			if(x != {}): winner_sum += x.keys()[0]
+		for x in playerlist[n].record_L: #losers
+			if(x != {}): winner_sum += x.keys()[0]
+
+		#return victory information
 		return playerlist[n].record, playerlist[n].record_L, wins, losses, wins_L, losses_L, winner_sum
 	else:
 		#winners bracket
 		for x in range(0,n/2):
 			single_match(playerlist, n, x, wins, losses, win_round, lose_round, wins_L, losses_L, win_round_L, lose_round_L, 1, raw_values)
+		
+		wins.append(win_round)
+		losses.append(lose_round)
+
 		#losers bracket
 		if(rnd == 0):
 			#losers vs losers
 			for x in range(n/2, 3*n/4):
 				single_match(playerlist, n, x, wins, losses, win_round, lose_round, wins_L, losses_L, win_round_L, lose_round_L, 3, raw_values)
+			
+			wins_L.append(win_round_L)
+			losses_L.append(lose_round_L)
 		else:
 			#winners vs losers
 			for x in range(n/2, n):
 				single_match(playerlist, n, x, wins, losses, win_round, lose_round, wins_L, losses_L, win_round_L, lose_round_L, 2, raw_values)
+			
+			wins_L.append(win_round_L)
+			losses_L.append(lose_round_L)
 
 			#losers vs losers
 			for x in range(n/2, 3*n/4):
 				single_match(playerlist, n, x, wins, losses, win_round, lose_round, wins_L, losses_L, win_round_L, lose_round_L, 3, raw_values)
-
-		wins.append(win_round)
-		losses.append(lose_round)
-		wins_L.append(win_round_L)
-		losses_L.append(lose_round_L)
+			
+			wins_L.append(win_round_L)
+			losses_L.append(lose_round_L)
 
 		return double_elim(n/2, playerlist, wins, losses, wins_L, losses_L, rnd+1, raw_values)
 
@@ -111,7 +132,9 @@ def single_match(playerlist, n, x, wins, losses, win_round, lose_round, wins_L=[
 		p1_roll = np.random.randint(0, playerlist[firstplayer].stam + 1)
 	except ValueError: #np.random.randint(0, 0) returns an error instead of 0
 		p1_roll = 0
-	except KeyError:
+	except KeyError: #remove me
+		print firstplayer
+		print secondplayer
 		print "a"
 
 	try:
@@ -119,6 +142,8 @@ def single_match(playerlist, n, x, wins, losses, win_round, lose_round, wins_L=[
 	except ValueError:
 		p2_roll = 0
 	except KeyError:
+		print firstplayer
+		print secondplayer
 		print "b"
 
 	## Rolls saved in each player's record
@@ -201,7 +226,7 @@ def tournament(variant, simulations=100000, raw_values=True, PLAYERS=64):
 	# each tournament win_tournament updates x times where x = matches played by round
 	# each round 
 	# and losers variants
-	# I wanna consolidate this later to look nicer but this works for now
+	# I wanna consolidate this later into an array with multiple indices to look nicer but this works for now
 	win_tournament_by_round = []
 	win_round_by_round = []
 	lose_tournament_by_round = []
@@ -214,16 +239,18 @@ def tournament(variant, simulations=100000, raw_values=True, PLAYERS=64):
 
 	all_winners = []
 
-	# "Zero out" lists
+	# "Zero out" lists ((needs to be slightly adjusted for double elim))
 	for z in range(0, int(np.log2(PLAYERS))): # number of stages in an elim tournament is repeated div by 2
 		win_tournament_by_round.append({})
 		win_round_by_round.append({})
 		lose_tournament_by_round.append({})
 		lose_round_by_round.append({})
-		win_tournament_by_round_L.append({})
-		win_round_by_round_L.append({})
-		lose_tournament_by_round_L.append({})
-		lose_round_by_round_L.append({})
+
+		for y in range(0, 2):
+			win_tournament_by_round_L.append({})
+			win_round_by_round_L.append({})
+			lose_tournament_by_round_L.append({})
+			lose_round_by_round_L.append({})
 
 	#Simulations
 	for x in range(0, simulations):
@@ -235,7 +262,6 @@ def tournament(variant, simulations=100000, raw_values=True, PLAYERS=64):
 			roll_points_normal(PLAYERS, playerlist)
 			
 		if(variant <= 2): #1-2: Single Elim Variants
-			# I figured out why this was wrong and I am sad and a lot of my code is bad now
 			winner, roundwin, roundlose, winner_sum = single_elim(PLAYERS, playerlist, [], [], raw_values)
 		else: #3-4: Double Elim Variants
 			winner, winner_L, roundwin, roundlose, roundwin_L, roundlose_L, winner_sum = double_elim(PLAYERS, playerlist, [], [], [], [], 0, raw_values)
@@ -247,9 +273,10 @@ def tournament(variant, simulations=100000, raw_values=True, PLAYERS=64):
 		incorporate(roundwin, win_round_by_round)
 		incorporate(roundlose, lose_round_by_round)
 		# Need these to only happen in double elim lmao
-		incorporate(winner_L, win_tournament_by_round_L)
-		incorporate(roundwin_L, win_round_by_round_L)
-		incorporate(roundlose_L, lose_round_by_round_L)
+		if (variant > 2):
+			incorporate(winner_L, win_tournament_by_round_L)
+			incorporate(roundwin_L, win_round_by_round_L)
+			incorporate(roundlose_L, lose_round_by_round_L)
 		all_winners.append(winner_sum)
 
 	return win_tournament_by_round, win_round_by_round, lose_round_by_round, win_tournament_by_round_L, win_round_by_round_L, lose_round_by_round_L, all_winners
