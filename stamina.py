@@ -4,12 +4,16 @@ Stamina.py by Eryk Banatt
 
 TODO:
 
-read this and fix shit
+you fixed this but you should link it in the links page this month because it was helpful
 http://docs.python-guide.org/en/latest/writing/gotchas/
 
 explore seeds for tournament 2
 explore difficulty rating in typical brackets and in actual brackets
 clean up shit, make sure its all good and readable
+	rewrite single_match to use the dicts instead of the older win_round_L bullshit I had
+	rewrite the way arguments are returned from single/double elim so that they're in arrays instead of a million params
+	consolidate tournament function
+	make this all readable so you can embed it in the actual writeup and have the code be relatively clean
 '''
 
 import numpy as np
@@ -19,48 +23,52 @@ from matplotlib import cm
 import matplotlib.pyplot as plt
 from functions import *
 
+#GLOBAL CONSTANTS
+WINNERS_WINS = 0
+WINNERS_LOSSES = 1
+LOSERS_WINS = 2
+LOSERS_LOSSES = 3
+
 ### Tournaments
 
 ## Tournaments only currently work for powers of 2 (just use 64)
 
 # Runs a Single Elimination tournament
+#	fuck this is coming together finally
 # 	output: winning players match record, 
 #			every rounds winning picks, 
 #			every rounds losing picks
-def single_elim(n, playerlist, wins, losses, raw_values=True):
+def single_elim(n, playerlist, matchhistory, raw_values=True):
 
-	win_round = {}
-	lose_round = {}
+	roundhistory = [{}, {}, {}, {}]
 
 	if(n == 1):
 		winner_sum = 0
 		for x in playerlist[n].record: winner_sum += x.keys()[0]
-		return playerlist[n].record, wins, losses, winner_sum
+		return playerlist[n].record, matchhistory[WINNERS_WINS], matchhistory[WINNERS_LOSSES], winner_sum
 	else:
 		for x in range(0,n/2):
-			single_match(playerlist, n, x, wins, losses, win_round, lose_round, 1, raw_values)
+			single_match(playerlist, n, x, matchhistory, roundhistory, 1, raw_values)
 
-		wins.append(win_round)
-		losses.append(lose_round)
+		matchhistory[WINNERS_WINS].append(roundhistory[WINNERS_WINS])
+		matchhistory[WINNERS_LOSSES].append(roundhistory[WINNERS_LOSSES])
 
-		return single_elim(n/2, playerlist, wins, losses, raw_values)
+		return single_elim(n/2, playerlist, matchhistory, raw_values)
 
-# as far as I can tell this is actually completed, but still doesn't work because the single_match logic doesn't
-def double_elim(n, playerlist, wins, losses, wins_L, losses_L, rnd, raw_values=True):
-	#Might be useful to eventually rewrite this to be a list of two dictionaries each, rather than four dicts
-	win_round = {}
-	lose_round = {}
-	win_round_L = {}
-	lose_round_L = {}
+# in process of being rewritten for readability
+def double_elim(n, playerlist, matchhistory, rnd, raw_values=True):
+	
+	# dicts containing what occurs during this round
+	roundhistory = [{}, {}, {}, {}]
 
 	if(n == 1):
 		#Grand Finals set 1
 		bracket_L_bracket = playerlist[n+1].seed
-		single_match(playerlist, 2, 0, wins, losses, win_round, lose_round, wins_L, losses_L, win_round_L, lose_round_L, 1, raw_values)
+		single_match(playerlist, 2, 0, matchhistory, roundhistory, 1, raw_values)
 		
 		#Grand Finals set 2
 		if playerlist[n+1].seed != bracket_L_bracket: 
-			single_match(playerlist, 2, 0, wins, losses, win_round, lose_round, wins_L, losses_L, win_round_L, lose_round_L, 1, raw_values)
+			single_match(playerlist, 2, 0, matchhistory, roundhistory, 1, raw_values)
 		
 		#sum points spent
 		winner_sum = 0
@@ -69,44 +77,58 @@ def double_elim(n, playerlist, wins, losses, wins_L, losses_L, rnd, raw_values=T
 		for x in playerlist[n].record_L: #losers
 			if(x != {}): winner_sum += x.keys()[0]
 
-		#return victory information
-		return playerlist[n].record, playerlist[n].record_L, wins, losses, wins_L, losses_L, winner_sum
+		#return victory information, please consolidate
+		return playerlist[n].record, playerlist[n].record_L, matchhistory[WINNERS_WINS], matchhistory[WINNERS_LOSSES], matchhistory[LOSERS_WINS], matchhistory[LOSERS_LOSSES], winner_sum
 	else:
 		#winners bracket
 		for x in range(0,n/2):
-			single_match(playerlist, n, x, wins, losses, win_round, lose_round, wins_L, losses_L, win_round_L, lose_round_L, 1, raw_values)
+			single_match(playerlist, n, x, matchhistory, roundhistory, 1, raw_values)
 		
-		wins.append(win_round)
-		losses.append(lose_round)
+		matchhistory[WINNERS_WINS].append(roundhistory[WINNERS_WINS])
+		matchhistory[WINNERS_LOSSES].append(roundhistory[WINNERS_LOSSES])
 
 		#losers bracket
 		if(rnd == 0):
 			#losers vs losers
 			for x in range(n/2, 3*n/4):
-				single_match(playerlist, n, x, wins, losses, win_round, lose_round, wins_L, losses_L, win_round_L, lose_round_L, 3, raw_values)
+				single_match(playerlist, n, x, matchhistory, roundhistory, 3, raw_values)
 			
-			wins_L.append(win_round_L)
-			losses_L.append(lose_round_L)
+			matchhistory[LOSERS_WINS].append(roundhistory[LOSERS_WINS])
+			matchhistory[LOSERS_LOSSES].append(roundhistory[LOSERS_LOSSES])
+
 		else:
 			#winners vs losers
 			for x in range(n/2, n):
-				single_match(playerlist, n, x, wins, losses, win_round, lose_round, wins_L, losses_L, win_round_L, lose_round_L, 2, raw_values)
+				single_match(playerlist, n, x, matchhistory, roundhistory, 2, raw_values)
 			
-			wins_L.append(win_round_L)
-			losses_L.append(lose_round_L)
+			matchhistory[LOSERS_WINS].append(roundhistory[LOSERS_WINS])
+			matchhistory[LOSERS_LOSSES].append(roundhistory[LOSERS_LOSSES])
 
 			#losers vs losers
 			for x in range(n/2, 3*n/4):
-				single_match(playerlist, n, x, wins, losses, win_round, lose_round, wins_L, losses_L, win_round_L, lose_round_L, 3, raw_values)
+				single_match(playerlist, n, x, matchhistory, roundhistory, 3, raw_values)
 			
-			wins_L.append(win_round_L)
-			losses_L.append(lose_round_L)
+			matchhistory[LOSERS_WINS].append(roundhistory[LOSERS_WINS])
+			matchhistory[LOSERS_LOSSES].append(roundhistory[LOSERS_LOSSES])
 
-		return double_elim(n/2, playerlist, wins, losses, wins_L, losses_L, rnd+1, raw_values)
+		return double_elim(n/2, playerlist, matchhistory, rnd+1, raw_values)
 
-# Works for single elimination, working on getting it working for double elimintation
-def single_match(playerlist, n, x, wins, losses, win_round, lose_round, wins_L=[], losses_L=[], win_round_L=[], lose_round_L=[], ratio = 1, raw_values=True):
+# Runs a single match between two players
+# 	would it be easier if I did the phase calculation in single/double elim and replace n/x with A and B?
+#	need to finish condensing to be cute and straightforward to read
+def single_match(playerlist, n, x, matchhistory, roundhistory, ratio = 1, raw_values=True):
 	#print("{} vs {}".format(playerlist[x+1].ID, playerlist[n-x].ID))
+	#placeholders for adjusting logic
+	wins = matchhistory[WINNERS_WINS]
+	losses = matchhistory[WINNERS_LOSSES]
+	wins_L = matchhistory[LOSERS_WINS]
+	losses_L = matchhistory[LOSERS_LOSSES]
+
+	win_round = roundhistory[WINNERS_WINS]
+	lose_round = roundhistory[WINNERS_LOSSES]
+	win_round_L = roundhistory[LOSERS_WINS]
+	lose_round_L = roundhistory[LOSERS_LOSSES]
+
 	# Constants for readability
 	PHASE_WINNERS = 0
 	PHASE_LOSERS = 1
@@ -262,13 +284,14 @@ def tournament(variant, simulations=100000, raw_values=True, PLAYERS=64):
 			roll_points_normal(PLAYERS, playerlist)
 			
 		if(variant <= 2): #1-2: Single Elim Variants
-			winner, roundwin, roundlose, winner_sum = single_elim(PLAYERS, playerlist, [], [], raw_values)
+			winner, roundwin, roundlose, winner_sum = single_elim(PLAYERS, playerlist, [[], [], [], []], raw_values) #eliminate empty lists
 		else: #3-4: Double Elim Variants
-			winner, winner_L, roundwin, roundlose, roundwin_L, roundlose_L, winner_sum = double_elim(PLAYERS, playerlist, [], [], [], [], 0, raw_values)
+			winner, winner_L, roundwin, roundlose, roundwin_L, roundlose_L, winner_sum = double_elim(PLAYERS, playerlist, [[], [], [], []], 0, raw_values)
 
 		playerlist = {} # Erase list of players to reroll
 
 		# Add tournament info to collections of data
+		# this will probably be zippable once everything is in lists
 		incorporate(winner, win_tournament_by_round)
 		incorporate(roundwin, win_round_by_round)
 		incorporate(roundlose, lose_round_by_round)
