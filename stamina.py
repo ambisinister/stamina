@@ -125,17 +125,6 @@ def double_elim(n, playerlist, matchhistory, rnd, raw_values=True):
 
 # Runs a single match between two players
 def single_match(playerlist, firstplayer, secondplayer, matchhistory, roundhistory, ratio = 1, raw_values=True):
-        #print("{} vs {}".format(playerlist[x+1].ID, playerlist[n-x].ID))
-        #placeholders for adjusting logic
-        wins = matchhistory[WINNERS_WINS]
-        losses = matchhistory[WINNERS_LOSSES]
-        wins_L = matchhistory[LOSERS_WINS]
-        losses_L = matchhistory[LOSERS_LOSSES]
-
-        win_round = roundhistory[WINNERS_WINS]
-        lose_round = roundhistory[WINNERS_LOSSES]
-        win_round_L = roundhistory[LOSERS_WINS]
-        lose_round_L = roundhistory[LOSERS_LOSSES]
 
         # Generates roll for each player
         #       (could I make this shorter?)
@@ -143,19 +132,10 @@ def single_match(playerlist, firstplayer, secondplayer, matchhistory, roundhisto
                 p1_roll = np.random.randint(0, playerlist[firstplayer].stam + 1)
         except ValueError: #np.random.randint(0, 0) returns an error instead of 0
                 p1_roll = 0
-        except KeyError: #remove me
-                print firstplayer
-                print secondplayer
-                print "a"
-
         try:
                 p2_roll = np.random.randint(0, playerlist[secondplayer].stam + 1)
         except ValueError:
                 p2_roll = 0
-        except KeyError:
-                print firstplayer
-                print secondplayer
-                print "b"
 
         ## Rolls saved in each player's record
         p1rec = {}
@@ -197,7 +177,7 @@ def single_match(playerlist, firstplayer, secondplayer, matchhistory, roundhisto
                 loseroll = p1_roll
         elif(p1_roll == p2_roll): # Tie, Randomly decided
                 winner = np.random.rand()
-                if(winner > .5): # I suppose this is still infinitesimally weighted towards p2 but whatever
+                if(winner > .5):
                         winroll = p1_roll
                         loseroll = p2_roll
                 else: #P2 wins requires swap
@@ -215,11 +195,11 @@ def single_match(playerlist, firstplayer, secondplayer, matchhistory, roundhisto
         #       winner will always be x+1 due to swaps
         #       adds to x_round if in winners, adds to x_round_L if in losers
         if(ratio is 1):
-                add_to_recordbook(win_round, winroll, playerlist, firstplayer, raw_values)
-                add_to_recordbook(lose_round, loseroll, playerlist, secondplayer, raw_values)
+                add_to_recordbook(roundhistory[WINNERS_WINS], winroll, playerlist, firstplayer, raw_values)
+                add_to_recordbook(roundhistory[WINNERS_LOSSES], loseroll, playerlist, secondplayer, raw_values)
         else:
-                add_to_recordbook(win_round_L, winroll, playerlist, firstplayer, raw_values)
-                add_to_recordbook(lose_round_L, loseroll, playerlist, secondplayer, raw_values)
+                add_to_recordbook(roundhistory[LOSERS_WINS], winroll, playerlist, firstplayer, raw_values)
+                add_to_recordbook(roundhistory[LOSERS_LOSSES], loseroll, playerlist, secondplayer, raw_values)
 
         # Deduct spent stamina from winner
         playerlist[firstplayer].stam -= winroll
