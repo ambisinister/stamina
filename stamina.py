@@ -10,10 +10,8 @@ http://docs.python-guide.org/en/latest/writing/gotchas/
 explore seeds for tournament 2
 explore difficulty rating in typical brackets and in actual brackets
 clean up shit, make sure its all good and readable
-        rewrite single_match to use the dicts instead of the older win_round_L bullshit I had
-        rewrite the way arguments are returned from single/double elim so that they're in arrays instead of a million params
-        consolidate tournament function
-        make this all readable so you can embed it in the actual writeup and have the code be relatively clean
+      figure out wtf you did with the arrays and make constants that make it legible
+      make this all readable so you can embed it in the actual writeup and have the code be relatively clean
 '''
 
 import numpy as np
@@ -33,8 +31,7 @@ LOSERS_LOSSES = 3
 
 ## Tournaments only currently work for powers of 2 (just use 64)
 
-# Runs a Single Elimination tournament
-#       fuck this is coming together finally
+# Runs a Single Elimination Tournamement
 #       output: winning players match record,
 #                       every rounds winning picks,
 #                       every rounds losing picks
@@ -45,7 +42,7 @@ def single_elim(n, playerlist, matchhistory, raw_values=True):
         if(n == 1):
                 winner_sum = 0
                 for x in playerlist[n].record: winner_sum += x.keys()[0]
-                return playerlist[n].record, matchhistory[WINNERS_WINS], matchhistory[WINNERS_LOSSES], winner_sum
+                return playerlist[n].record, matchhistory, winner_sum
         else:
                 for x in range(0,n/2):
                         single_match(playerlist, x+1, n-x, matchhistory, roundhistory, 1, raw_values)
@@ -78,11 +75,7 @@ def double_elim(n, playerlist, matchhistory, rnd, raw_values=True):
                         if(x != {}): winner_sum += x.keys()[0]
 
                 #return victory information, please consolidate
-                return (playerlist[n].record, playerlist[n].record_L,
-                        matchhistory[WINNERS_WINS],
-                        matchhistory[WINNERS_LOSSES],
-                        matchhistory[LOSERS_WINS],
-                        matchhistory[LOSERS_LOSSES], winner_sum)
+                return playerlist[n].record, playerlist[n].record_L, matchhistory, winner_sum
         else:
                 #winners bracket
                 for x in range(0,n/2):
@@ -218,30 +211,15 @@ def tournament(variant, simulations=100000, raw_values=True, PLAYERS=64):
         # each round
         # and losers variants
         # I wanna consolidate this later into an array with multiple indices to look nicer but this works for now
-        win_tournament_by_round = []
-        win_round_by_round = []
-        lose_tournament_by_round = []
-        lose_round_by_round = []
-
-        win_tournament_by_round_L = []
-        win_round_by_round_L = []
-        lose_tournament_by_round_L = []
-        lose_round_by_round_L = []
-
+        allrounds = [[], [], [], [], [], [], [], []]
         all_winners = []
 
         # "Zero out" lists ((needs to be slightly adjusted for double elim))
         for z in range(0, int(np.log2(PLAYERS))): # number of stages in an elim tournament is repeated div by 2
-                win_tournament_by_round.append({})
-                win_round_by_round.append({})
-                lose_tournament_by_round.append({})
-                lose_round_by_round.append({})
-
-                for y in range(0, 2):
-                        win_tournament_by_round_L.append({})
-                        win_round_by_round_L.append({})
-                        lose_tournament_by_round_L.append({})
-                        lose_round_by_round_L.append({})
+                for a in allrounds: a.append({})
+                for y in range(4, 8):
+                        allrounds[y].append({})
+                        allrounds[y].append({})
 
         #Simulations
         for x in range(0, simulations):
@@ -253,25 +231,23 @@ def tournament(variant, simulations=100000, raw_values=True, PLAYERS=64):
                         roll_points_normal(PLAYERS, playerlist)
 
                 if(variant <= 2): #1-2: Single Elim Variants
-                        winner, roundwin, roundlose, winner_sum = single_elim(PLAYERS, playerlist, [[], [], [], []], raw_values) #eliminate empty lists
+                        winner, roundhistory, winner_sum = single_elim(PLAYERS, playerlist, [[], [], [], []], raw_values)
                 else: #3-4: Double Elim Variants
-                        winner, winner_L, roundwin, roundlose, roundwin_L, roundlose_L, winner_sum = double_elim(PLAYERS, playerlist, [[], [], [], []], 0, raw_values)
+                        winner, winner_L, roundhistory, winner_sum = double_elim(PLAYERS, playerlist, [[], [], [], []], 0, raw_values)
 
                 playerlist = {} # Erase list of players to reroll
 
                 # Add tournament info to collections of data
-                # this will probably be zippable once everything is in lists
-                incorporate(winner, win_tournament_by_round)
-                incorporate(roundwin, win_round_by_round)
-                incorporate(roundlose, lose_round_by_round)
-                # Need these to only happen in double elim lmao
-                if (variant > 2):
-                        incorporate(winner_L, win_tournament_by_round_L)
-                        incorporate(roundwin_L, win_round_by_round_L)
-                        incorporate(roundlose_L, lose_round_by_round_L)
-                        all_winners.append(winner_sum)
 
-        return win_tournament_by_round, win_round_by_round, lose_round_by_round, win_tournament_by_round_L, win_round_by_round_L, lose_round_by_round_L, all_winners
+                
+                for new, old in zip(roundhistory, allrounds):
+                    incorporate(new, old)
+                incorporate(winner, allrounds[6])
+                if (variant > 2): incorporate(winner_L, allrounds[7])
+                        
+                all_winners.append(winner_sum)
+
+        return allrounds, all_winners
 
 # Sort of niche function to generate a plot of the top of the normal distribution for successively larger tournaments
 #       more mainfile-ish code but I want to refer back to it later without deleting it
