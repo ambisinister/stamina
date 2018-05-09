@@ -6,12 +6,6 @@ TODO:
 
 you fixed this but you should link it in the links page this month because it was helpful
 http://docs.python-guide.org/en/latest/writing/gotchas/
-
-explore seeds for tournament 2
-explore difficulty rating in typical brackets and in actual brackets
-clean up shit, make sure its all good and readable
-      figure out wtf you did with the arrays and make constants that make it legible
-      make this all readable so you can embed it in the actual writeup and have the code be relatively clean
 '''
 
 import numpy as np
@@ -26,6 +20,9 @@ WINNERS_WINS = 0
 WINNERS_LOSSES = 1
 LOSERS_WINS = 2
 LOSERS_LOSSES = 3
+
+c_WINNERS = 4
+c_WINNERS_L = 5
 
 ### Tournaments
 
@@ -58,6 +55,11 @@ def double_elim(n, playerlist, matchhistory, rnd, raw_values=True):
         # dicts containing what occurs during this round
         roundhistory = [{}, {}, {}, {}]
 
+        #constants
+        c_WINNER = 6
+        c_WINNER_L = 7
+
+        
         if(n == 1):
                 #Grand Finals set 1
                 bracket_L_bracket = playerlist[n+1].seed
@@ -201,34 +203,27 @@ def single_match(playerlist, firstplayer, secondplayer, matchhistory, roundhisto
         playerlist[secondplayer].stam -= loseroll
 
 #Simulated Tournaments, temporarily broken for single elim
-def tournament(variant, simulations=100000, raw_values=True, PLAYERS=64):
+def tournament(variant, simulations=100000, raw_values=True, PLAYERS=64, value=100):
 
         playerlist = {}
-
-        # These are lists of dictionaries, one dictionary per round
-        # each round win/lose_round odds updates n/2 times (each)
-        # each tournament win_tournament updates x times where x = matches played by round
-        # each round
-        # and losers variants
-        # I wanna consolidate this later into an array with multiple indices to look nicer but this works for now
-        allrounds = [[], [], [], [], [], [], [], []]
+        allrounds = [[], [], [], [], [], []]
         all_winners = []
 
         # "Zero out" lists ((needs to be slightly adjusted for double elim))
         for z in range(0, int(np.log2(PLAYERS))): # number of stages in an elim tournament is repeated div by 2
                 for a in allrounds: a.append({})
-                for y in range(4, 8):
-                        allrounds[y].append({})
-                        allrounds[y].append({})
-
+                #for y in [3, 4]:
+                 #       allrounds[y].append({})
+                  #      allrounds[y].append({})
+                
         #Simulations
         for x in range(0, simulations):
 
                 # reroll points for random assign every simulation
                 if(variant in [1, 3]):
-                        roll_points_uniform(PLAYERS, playerlist)
+                        roll_points_uniform(PLAYERS, playerlist, value)
                 else:
-                        roll_points_normal(PLAYERS, playerlist)
+                        roll_points_normal(PLAYERS, playerlist, values)
 
                 if(variant <= 2): #1-2: Single Elim Variants
                         winner, roundhistory, winner_sum = single_elim(PLAYERS, playerlist, [[], [], [], []], raw_values)
@@ -237,16 +232,13 @@ def tournament(variant, simulations=100000, raw_values=True, PLAYERS=64):
 
                 playerlist = {} # Erase list of players to reroll
 
-                # Add tournament info to collections of data
-
-                
+                # Add tournament info to collections of data                
                 for new, old in zip(roundhistory, allrounds):
                     incorporate(new, old)
-                incorporate(winner, allrounds[6])
-                if (variant > 2): incorporate(winner_L, allrounds[7])
-                        
+                incorporate(winner, allrounds[c_WINNERS])
+                if (variant > 2): incorporate(winner_L, allrounds[c_WINNERS_L])
                 all_winners.append(winner_sum)
-
+                
         return allrounds, all_winners
 
 # Sort of niche function to generate a plot of the top of the normal distribution for successively larger tournaments

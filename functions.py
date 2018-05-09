@@ -1,7 +1,6 @@
 '''
 Stamina.py by Eryk Banatt
 
-
 File full of helper functions
 '''
 
@@ -90,8 +89,8 @@ def swapPlayersInDict(player1, player2, dic):
 
 # Creates n players in playerlist with random, normally distributed stamina values
 # 	Will need to be rerolled every simulation, since 64 won't get every value
-def roll_points_normal(n, playerlist):
-	mu, sigma = 50, 25 #mean 75, SD 25; might need tuning
+def roll_points_normal(n, playerlist, val=100):
+	mu, sigma = val-25, 25 #mean 75, SD 25; might need tuning
 	sample = np.random.normal(mu, sigma, n)
 	sample.sort()
 	sample = sample[::-1] # feels gross doing this instead of reverse=True but it's not behaving with numpy
@@ -215,6 +214,7 @@ def divout2(a, b):
 	return c
 
 # Simple Helper Function
+# doesn't do things well just mainfile code
 def prep_batcher(win_tourn_raw, win_round_raw, lose_round_raw):
 	win_tourn = prep_dict_for_viz(win_tourn_raw)
 	win_round = prep_dict_for_viz(win_round_raw)
