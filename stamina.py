@@ -211,11 +211,11 @@ def tournament(variant, simulations=100000, raw_values=True, PLAYERS=64, value=1
 
         # "Zero out" lists ((needs to be slightly adjusted for double elim))
         for z in range(0, int(np.log2(PLAYERS))): # number of stages in an elim tournament is repeated div by 2
-                for a in allrounds: a.append({})
-                #for y in [3, 4]:
-                 #       allrounds[y].append({})
-                  #      allrounds[y].append({})
-                
+                for a in range(0, len(allrounds)):
+                        if a in [2, 3]:
+                                allrounds[a] += [{}, {}]
+                        else:
+                                allrounds[a] += [{}]
         #Simulations
         for x in range(0, simulations):
 
