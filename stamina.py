@@ -39,7 +39,7 @@ def single_elim(n, playerlist, matchhistory, raw_values=True):
         if(n == 1):
                 winner_sum = 0
                 for x in playerlist[n].record: winner_sum += x.keys()[0]
-                return playerlist[n].record, matchhistory, winner_sum
+                return playerlist[n].record, matchhistory, winner_sum, playerlist
         else:
                 for x in range(0,n/2):
                         single_match(playerlist, x+1, n-x, matchhistory, roundhistory, 1, raw_values)
@@ -77,7 +77,7 @@ def double_elim(n, playerlist, matchhistory, rnd, raw_values=True):
                         if(x != {}): winner_sum += x.keys()[0]
 
                 #return victory information, please consolidate
-                return playerlist[n].record, playerlist[n].record_L, matchhistory, winner_sum
+                return playerlist[n].record, playerlist[n].record_L, matchhistory, winner_sum, playerlist
         else:
                 #winners bracket
                 for x in range(0,n/2):
@@ -206,6 +206,7 @@ def single_match(playerlist, firstplayer, secondplayer, matchhistory, roundhisto
 def tournament(variant, simulations=100000, raw_values=True, PLAYERS=64, value=100):
 
         playerlist = {}
+        complete_playerlist = []
         allrounds = [[], [], [], [], [], []]
         all_winners = []
 
@@ -226,9 +227,9 @@ def tournament(variant, simulations=100000, raw_values=True, PLAYERS=64, value=1
                         roll_points_normal(PLAYERS, playerlist, values)
 
                 if(variant <= 2): #1-2: Single Elim Variants
-                        winner, roundhistory, winner_sum = single_elim(PLAYERS, playerlist, [[], [], [], []], raw_values)
+                        winner, roundhistory, winner_sum, playerlist_rnd = single_elim(PLAYERS, playerlist, [[], [], [], []], raw_values)
                 else: #3-4: Double Elim Variants
-                        winner, winner_L, roundhistory, winner_sum = double_elim(PLAYERS, playerlist, [[], [], [], []], 0, raw_values)
+                        winner, winner_L, roundhistory, winner_sum, playerlist_rnd = double_elim(PLAYERS, playerlist, [[], [], [], []], 0, raw_values)
 
                 playerlist = {} # Erase list of players to reroll
 
@@ -238,8 +239,9 @@ def tournament(variant, simulations=100000, raw_values=True, PLAYERS=64, value=1
                 incorporate(winner, allrounds[c_WINNERS])
                 if (variant > 2): incorporate(winner_L, allrounds[c_WINNERS_L])
                 all_winners.append(winner_sum)
+                complete_playerlist.append(playerlist_rnd)
                 
-        return allrounds, all_winners
+        return allrounds, all_winners, complete_playerlist
 
 # Sort of niche function to generate a plot of the top of the normal distribution for successively larger tournaments
 #       more mainfile-ish code but I want to refer back to it later without deleting it
