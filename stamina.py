@@ -1,11 +1,6 @@
 '''
 Stamina.py by Eryk Banatt
 
-
-TODO:
-
-you fixed this but you should link it in the links page this month because it was helpful
-http://docs.python-guide.org/en/latest/writing/gotchas/
 '''
 
 import numpy as np
