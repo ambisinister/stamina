@@ -1,10 +1,9 @@
-
 '''
 Stamina.py by Eryk Banatt
 
-
 mainfile which actually runs things
 '''
+
 from stamina import *
 
 def main():

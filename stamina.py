@@ -1,4 +1,4 @@
-x'''
+'''
 Stamina.py by Eryk Banatt
 
 '''
