@@ -1,4 +1,4 @@
-'''
+x'''
 Stamina.py by Eryk Banatt
 
 '''
@@ -214,12 +214,14 @@ def tournament(variant, simulations=100000, raw_values=True, PLAYERS=64, value=1
                                 allrounds[a] += [{}]
         #Simulations
         for x in range(0, simulations):
-
+                # debug function so you can see how far its going
+                if x % 1000 == 0: print "Running Tournament {}...".format(x)
+                
                 # reroll points for random assign every simulation
                 if(variant in [1, 3]):
                         roll_points_uniform(PLAYERS, playerlist, value)
                 else:
-                        roll_points_normal(PLAYERS, playerlist, values)
+                        roll_points_normal(PLAYERS, playerlist, value)
 
                 if(variant <= 2): #1-2: Single Elim Variants
                         winner, roundhistory, winner_sum, playerlist_rnd = single_elim(PLAYERS, playerlist, [[], [], [], []], raw_values)
